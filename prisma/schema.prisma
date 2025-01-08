@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model cliente {
+  id                String    @id @default(uuid())
+  name              String
+  ruc               Int       @unique
+  direccion         String?
+  telefono          String?
+  email             String?
+  createAt          DateTime  @default(now())
+  updateAt          DateTime  @updatedAt
+  // Relación 1 a muchos para facturas donde el cliente actúa como vendedor
+  facturasVendidas  factura[] @relation("VendedorRelation")
+  // Relación 1 a muchos para facturas donde el cliente actúa como comprador
+  facturasCompradas factura[] @relation("CompradorRelation")
+}
+
+model factura {
+  id               String   @id @default(uuid())
+  idVendedor       String
+  idComprador      String
+  tipoComprobante  String
+  nroComprobante   String   @unique
+  timbrado         String
+  Moneda           String?
+  cotizacion       Int?
+  subtotalGeneral  Int
+  impuestoGeneral  Int
+  totalGeneral     Int
+  descuento        Int
+  descripcion      String?
+  estado           String
+  CDC              String?
+  emitidaPor       String?
+  fechaEmision     DateTime
+  fechaVencimiento DateTime
+  createAt         DateTime @default(now())
+  updateAt         DateTime @updatedAt
+  items            item[]
+  // Relación con el vendedor (1 vendedor puede tener muchas facturas)
+  vendedor  cliente @relation("VendedorRelation", fields: [idVendedor], references: [id])
+  // Relación con el comprador (1 factura tiene un comprador)
+  comprador cliente @relation("CompradorRelation", fields: [idComprador], references: [id])
+}
+
+model item {
+  id             String  @id @default(uuid())
+  idFactura      String
+  cantidad       Int
+  descripcion    String?
+  precioUnitario Int
+  impuesto       Int
+  valorTotal     Int
+  // Relación con factura
+  factura factura @relation(fields: [idFactura], references: [id])
+}
